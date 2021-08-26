@@ -27,18 +27,19 @@ def pytorch2onnx(model,
     input_config = {
         'input_shape': input_shape,
         'input_path': input_img,
-        'normalize_cfg': normalize_cfg
     }
     # prepare input
     one_img, one_meta = preprocess_example_input(input_config)
-    img_list, img_meta_list = [one_img], [[one_meta]]
+    img_list, img_meta_list = [one_img.type(torch.uint8)], [[one_meta]]
     # replace original forward function
     origin_forward = model.forward
     model.forward = partial(
         model.forward,
         img_metas=img_meta_list,
         return_loss=False,
-        rescale=False)
+        rescale=False,
+        normalize_cfg=normalize_cfg
+    )
 
     output_names = ['dets', 'labels']
     if model.with_mask:
