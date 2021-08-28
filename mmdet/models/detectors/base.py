@@ -171,7 +171,10 @@ class BaseDetector(BaseModule, metaclass=ABCMeta):
                 mean = torch.tensor(normalize_cfg['mean'])[..., None, None]
                 std = torch.tensor(normalize_cfg['std'])[..., None, None]
                 onnx_input = (img[0] - mean) / std
-            return self.onnx_export(onnx_input, img_metas[0])
+            onnx_output = self.onnx_export(onnx_input, img_metas[0])
+            onnx_w, onnx_h = img_metas[0][0]['img_shape_for_onnx']
+            onnx_output[0][:,:,:4] = onnx_output[0][:,:,:4] / torch.stack([onnx_w, onnx_h, onnx_w, onnx_h])
+            return onnx_output
 
         if return_loss:
             return self.forward_train(img, img_metas, **kwargs)
